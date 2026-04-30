@@ -6,22 +6,78 @@ void main() {
   runApp(const SignSyncApp());
 }
 
-class SignSyncApp extends StatelessWidget {
+class SignSyncApp extends StatefulWidget {
   const SignSyncApp({super.key});
+
+@override
+  State<SignSyncApp> createState() => _SignSyncAppState();
+}
+
+class _SignSyncAppState extends State<SignSyncApp> {
+  String _companyName = "Lade..."; // Standardwert während des Ladens
+  final _storage = const FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCompanyName();
+  }
+
+  // Liest den gespeicherten Namen aus
+  Future<void> _loadCompanyName() async {
+    String? name = await _storage.read(key: 'company_name');
+    if (mounted) {
+      setState(() {
+        _companyName = name ?? "SignSync";
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'SignSync',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
+      appBar: AppBar(
+        title: const Text('Dashboard', style: TextStyle(fontSize: 16)),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black54,
+        elevation: 0.5,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+            ),
+          )
+        ],
       ),
-      home: const LoginPage(),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // --- DYNAMISCHER HEADER ---
+            Text(
+              'SignSync Dashboard: $_companyName', // Hier wird die Variable genutzt!
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Willkommen zurück! Hier können Sie Ihre Arbeitszeiten erfassen und einsehen.',
+              style: TextStyle(color: Colors.black54, fontSize: 16),
+            ),
+            
+            const SizedBox(height: 32),
+
+            // ... (Rest des Codes wie vorher: LayoutBuilder, ActionCards, etc.)
+            // Hinweis: Da dies jetzt eine State-Klasse ist, musst du 
+            // die Hilfsmethoden wie _buildActionCard etc. ebenfalls 
+            // in diese Klasse verschieben oder als static definieren.
+          ],
+        ),
+      ),
     );
   }
-}
 
 // --- LOGIN SCREEN ---
 class LoginPage extends StatefulWidget {

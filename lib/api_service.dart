@@ -32,6 +32,12 @@ class ApiService {
       });
       if (response.statusCode == 200) {
         await _storage.write(key: 'auth_token', value: response.data['token']);
+        
+        // NEU: Firmennamen aus der API-Antwort speichern
+        // Ich nehme an, Laravel sendet { "token": "...", "user": { "company_name": "Firma XY" } }
+        final companyName = response.data['user']['company_name'] ?? 'Meine Firma';
+        await _storage.write(key: 'company_name', value: companyName);
+        
         return true;
       }
       return false;
