@@ -71,4 +71,35 @@ class ApiService {
       return false;
     }
   }
+  // --- TIMER LOGIK ---
+  DateTime? externalStartTime;
+  bool isTimerRunning = false;
+
+  // Diese Methode beim App-Start aufrufen, um laufende Timer wiederherzustellen
+  Future<void> recoverTimer() async {
+    String? storedStart = await _storage.read(key: 'timer_start_time');
+    if (storedStart != null) {
+      externalStartTime = DateTime.parse(storedStart);
+      isTimerRunning = true;
+    }
+  }
+
+  Future<void> startGlobalTimer() async {
+    externalStartTime = DateTime.now();
+    isTimerRunning = true;
+    // Zeitstempel dauerhaft speichern
+    await _storage.write(key: 'timer_start_time', value: externalStartTime!.toIso8601String());
+  }
+
+  Future<void> stopGlobalTimer() async {
+    isTimerRunning = false;
+    externalStartTime = null;
+    // Speicher löschen
+    await _storage.delete(key: 'timer_start_time');
+  }
+
+  Duration get currentDuration {
+    if (externalStartTime == null) return Duration.zero;
+    return DateTime.now().difference(externalStartTime!);
+  }
 }

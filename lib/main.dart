@@ -1,83 +1,34 @@
 import 'package:flutter/material.dart';
-import 'api_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:async';
+import 'api_service.dart';
 
-void main() {
+void main() async {
+  // Stellt sicher, dass die Flutter-Engine bereit ist, bevor wir den Speicher auslesen
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Versucht, einen laufenden Timer aus dem Speicher zu laden
+  await ApiService().recoverTimer(); 
+  
   runApp(const SignSyncApp());
 }
 
-class SignSyncApp extends StatefulWidget {
+class SignSyncApp extends StatelessWidget {
   const SignSyncApp({super.key});
-
-@override
-  State<SignSyncApp> createState() => _SignSyncAppState();
-}
-
-class _SignSyncAppState extends State<SignSyncApp> {
-  String _companyName = "Lade..."; // Standardwert während des Ladens
-  final _storage = const FlutterSecureStorage();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCompanyName();
-  }
-
-  // Liest den gespeicherten Namen aus
-  Future<void> _loadCompanyName() async {
-    String? name = await _storage.read(key: 'company_name');
-    if (mounted) {
-      setState(() {
-        _companyName = name ?? "SignSync";
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: const Text('Dashboard', style: TextStyle(fontSize: 16)),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black54,
-        elevation: 0.5,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const LoginPage()),
-            ),
-          )
-        ],
+    return MaterialApp(
+      title: 'SignSync',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // --- DYNAMISCHER HEADER ---
-            Text(
-              'SignSync Dashboard: $_companyName', // Hier wird die Variable genutzt!
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Willkommen zurück! Hier können Sie Ihre Arbeitszeiten erfassen und einsehen.',
-              style: TextStyle(color: Colors.black54, fontSize: 16),
-            ),
-            
-            const SizedBox(height: 32),
-
-            // ... (Rest des Codes wie vorher: LayoutBuilder, ActionCards, etc.)
-            // Hinweis: Da dies jetzt eine State-Klasse ist, musst du 
-            // die Hilfsmethoden wie _buildActionCard etc. ebenfalls 
-            // in diese Klasse verschieben oder als static definieren.
-          ],
-        ),
-      ),
+      home: const LoginPage(),
     );
   }
+}
 
 // --- LOGIN SCREEN ---
 class LoginPage extends StatefulWidget {
@@ -116,7 +67,7 @@ class _LoginPageState extends State<LoginPage> {
         _showError('Login fehlgeschlagen. Daten prüfen.');
       }
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
       _showError('Verbindungsfehler zum Server.');
     }
   }
@@ -138,8 +89,7 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lock_clock_outlined,
-                  size: 80, color: Colors.blue),
+              const Icon(Icons.lock_clock_outlined, size: 80, color: Colors.blue),
               const SizedBox(height: 40),
               TextField(
                 controller: _emailController,
@@ -170,8 +120,7 @@ class _LoginPageState extends State<LoginPage> {
                         backgroundColor: Colors.blue,
                         foregroundColor: Colors.white,
                       ),
-                      child: const Text('Anmelden',
-                          style: TextStyle(fontSize: 16)),
+                      child: const Text('Anmelden', style: TextStyle(fontSize: 16)),
                     ),
             ],
           ),
@@ -182,8 +131,31 @@ class _LoginPageState extends State<LoginPage> {
 }
 
 // --- HOME SCREEN (DASHBOARD) ---
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  String _companyName = "Lade...";
+  final _storage = const FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCompanyName();
+  }
+
+  Future<void> _loadCompanyName() async {
+    String? name = await _storage.read(key: 'company_name');
+    if (mounted) {
+      setState(() {
+        _companyName = name ?? "SignSync";
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -194,7 +166,6 @@ class HomePage extends StatelessWidget {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black54,
         elevation: 0.5,
-        centerTitle: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -209,13 +180,13 @@ class HomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'SignSync Dashboard: Fritzler eCommerce',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            Text(
+              'SignSync Dashboard: $_companyName',
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             const Text(
-              'Willkommen zurück, Test Angestellter. Hier können Sie Ihre Arbeitszeiten erfassen und einsehen.',
+              'Willkommen zurück! Hier können Sie Ihre Arbeitszeiten erfassen und einsehen.',
               style: TextStyle(color: Colors.black54, fontSize: 16),
             ),
             const SizedBox(height: 32),
@@ -228,17 +199,11 @@ class HomePage extends StatelessWidget {
                     flex: isWide ? 1 : 0,
                     child: _buildActionCard(
                       title: 'Schülerbegleitung',
-                      subtitle:
-                          'Erfasse Zeiten für deine zugewiesenen Schüler. Diese Zeiten erscheinen auf dem Leistungsnachweis für das Amt.',
+                      subtitle: 'Erfasse Zeiten für deine zugewiesenen Schüler.',
                       icon: Icons.groups,
                       buttonText: 'Zeit für Schüler erfassen',
                       buttonColor: const Color(0xFF4466F2),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                CreateEntryPage()), // KEIN const hier
-                      ),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CreateEntryPage())),
                     ),
                   ),
                   SizedBox(width: isWide ? 20 : 0, height: isWide ? 0 : 20),
@@ -246,17 +211,11 @@ class HomePage extends StatelessWidget {
                     flex: isWide ? 1 : 0,
                     child: _buildActionCard(
                       title: 'Interne Arbeitszeit',
-                      subtitle:
-                          'Erfasse Büroarbeit, Team-Meetings, Fortbildungen oder Fahrtzeiten. Diese Zeiten sind nur für deine interne Abrechnung.',
+                      subtitle: 'Erfasse Büroarbeit, Meetings oder Fahrtzeiten.',
                       icon: Icons.work,
                       buttonText: 'Arbeitszeit erfassen',
                       buttonColor: const Color(0xFF67C6E3),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const InternalWorkPage()),
-                        );
-                      },
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const InternalWorkPage())),
                     ),
                   ),
                 ],
@@ -266,60 +225,33 @@ class HomePage extends StatelessWidget {
             _buildStatsCard(),
             const SizedBox(height: 24),
             _buildArchiveBar(),
-            const SizedBox(height: 40),
-            const Center(
-              child: Text(
-                '🛡️ Ihre Daten werden sicher und DSGVO-konform für die Abrechnung verarbeitet.',
-                style: TextStyle(color: Colors.black45, fontSize: 12),
-              ),
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildActionCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required String buttonText,
-    required Color buttonColor,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildActionCard({required String title, required String subtitle, required IconData icon, required String buttonText, required Color buttonColor, required VoidCallback onTap}) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border(left: BorderSide(color: buttonColor, width: 4)),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
       ),
       child: Column(
         children: [
           Icon(icon, size: 48, color: buttonColor),
           const SizedBox(height: 16),
-          Text(title,
-              style:
-                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
-          Text(subtitle,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.black54, height: 1.4)),
+          Text(subtitle, textAlign: TextAlign.center, style: const TextStyle(color: Colors.black54)),
           const SizedBox(height: 20),
-          ElevatedButton.icon(
+          ElevatedButton(
             onPressed: onTap,
-            icon: const Icon(Icons.add_circle_outline),
-            label: Text(buttonText),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: buttonColor,
-              foregroundColor: Colors.white,
-              minimumSize: const Size.fromHeight(45),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: buttonColor, foregroundColor: Colors.white, minimumSize: const Size.fromHeight(45)),
+            child: Text(buttonText),
           ),
         ],
       ),
@@ -329,50 +261,13 @@ class HomePage extends StatelessWidget {
   Widget _buildStatsCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: const Border(left: BorderSide(color: Colors.green, width: 4)),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
-        ],
-      ),
-      child: Column(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: const Border(left: BorderSide(color: Colors.green, width: 4))),
+      child: const Column(
         children: [
-          const Text('📅 ARBEITSSTUNDEN IM APRIL',
-              style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black45)),
-          const SizedBox(height: 12),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text('19,73',
-                  style: TextStyle(
-                      fontSize: 56,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2D3748))),
-              SizedBox(width: 8),
-              Text('Std.',
-                  style: TextStyle(fontSize: 24, color: Colors.black54)),
-            ],
-          ),
-          const Text('Gesamtzeit aller Einsätze und Bürozeiten diesen Monat.',
-              style: TextStyle(color: Colors.black54)),
-          const SizedBox(height: 20),
-          OutlinedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.list),
-            label: const Text('Alle Einträge anzeigen'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.green,
-              side: const BorderSide(color: Colors.green),
-            ),
-          ),
+          Text('📅 ARBEITSSTUNDEN IM APRIL', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black45)),
+          SizedBox(height: 12),
+          Text('19,73 Std.', style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -381,288 +276,102 @@ class HomePage extends StatelessWidget {
   Widget _buildArchiveBar() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
-        ],
-      ),
-      child: Row(
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+      child: const Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-                color: Colors.amber.shade50, shape: BoxShape.circle),
-            child: const Icon(Icons.lock_outline, color: Colors.amber),
-          ),
-          const SizedBox(width: 16),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Dokumente & Archiv',
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Text(
-                    'Alle signierten Leistungs- und Arbeitsnachweise einsehen.',
-                    style: TextStyle(color: Colors.black54, fontSize: 14)),
-              ],
-            ),
-          ),
-          OutlinedButton.icon(
-            onPressed: () {},
-            label: const Text('Zum Archiv'),
-            icon: const Icon(Icons.arrow_forward),
-            style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.amber,
-                side: const BorderSide(color: Colors.amber)),
-          ),
+          Icon(Icons.archive, color: Colors.amber),
+          SizedBox(width: 16),
+          Text('Dokumente & Archiv', style: TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
 }
 
-// --- NEU: LEISTUNG ERSTELLEN SCREEN ---
+// --- LEISTUNG ERSTELLEN (SCHÜLER) ---
 class CreateEntryPage extends StatefulWidget {
   const CreateEntryPage({super.key});
-
   @override
   State<CreateEntryPage> createState() => _CreateEntryPageState();
 }
 
 class _CreateEntryPageState extends State<CreateEntryPage> {
   final _remarkController = TextEditingController();
-
-  // Datums-Variablen
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now().add(const Duration(hours: 1));
-
   bool _isSaving = false;
 
-  // Hilfsfunktion zum Formatieren des Datums (DD.MM.YYYY HH:mm)
   String _formatDateTime(DateTime dt) {
     return "${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
   }
 
-  // Funktion zum Öffnen des Date/Time Pickers
   Future<void> _pickDateTime(bool isStart) async {
-    DateTime? date = await showDatePicker(
-      context: context,
-      initialDate: isStart ? _startDate : _endDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-    );
-
-    if (date == null || !mounted) return;
-
-    TimeOfDay? time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(isStart ? _startDate : _endDate),
-    );
-
+    DateTime? date = await showDatePicker(context: context, initialDate: isStart ? _startDate : _endDate, firstDate: DateTime(2020), lastDate: DateTime(2100));
+    if (date == null) return;
+    TimeOfDay? time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(isStart ? _startDate : _endDate));
     if (time == null) return;
-
     setState(() {
-      final newDt =
-          DateTime(date.year, date.month, date.day, time.hour, time.minute);
-      if (isStart) {
-        _startDate = newDt;
-      } else {
-        _endDate = newDt;
-      }
+      final newDt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      isStart ? _startDate = newDt : _endDate = newDt;
     });
-  }
-
-  void _saveEntry() async {
-    setState(() => _isSaving = true);
-
-    // Dauer berechnen für die API (in Minuten oder Stunden)
-    final duration = _endDate.difference(_startDate).inMinutes.toString();
-
-    bool success = await ApiService().createEntry(
-      studentId: "1", // Max Mustermann ID
-      type: "Leistung",
-      duration: duration,
-      description: _remarkController.text,
-    );
-
-    if (!mounted) return;
-    setState(() => _isSaving = false);
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Zeitraum erfolgreich gespeichert!'),
-            backgroundColor: Colors.green),
-      );
-      Navigator.pop(context);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: Row(
+      appBar: AppBar(title: const Text('Neuen Zeiteintrag erstellen')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.access_time, size: 20, color: Colors.green),
-            const SizedBox(width: 8),
-            const Text('Neuen Zeiteintrag erstellen',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Schüler / Klient', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: const Color(0xFFF1F3F5), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.black12)),
+              child: const Row(children: [Icon(Icons.school, color: Colors.green), SizedBox(width: 12), Text('Max Mustermann', style: TextStyle(fontWeight: FontWeight.bold))]),
+            ),
+            const SizedBox(height: 24),
+            Row(children: [
+              Expanded(child: _buildPickerBox('START', _startDate, () => _pickDateTime(true))),
+              const SizedBox(width: 16),
+              Expanded(child: _buildPickerBox('ENDE', _endDate, () => _pickDateTime(false))),
+            ]),
+            const SizedBox(height: 24),
+            const Text('BEMERKUNG (OPTIONAL)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            const SizedBox(height: 8),
+            TextField(controller: _remarkController, maxLines: 4, decoration: const InputDecoration(filled: true, fillColor: Colors.white, border: OutlineInputBorder())),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF427D5D), foregroundColor: Colors.white, minimumSize: const Size.fromHeight(55)),
+              child: const Text('Zeitraum speichern'),
+            ),
           ],
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
-      ),
-      body: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 800),
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // --- SCHÜLER SEKTION ---
-              const Text('Schüler / Klient',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F3F5),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.black12),
-                ),
-                child: Row(
-                  children: const [
-                    Icon(Icons.school, color: Colors.green, size: 20),
-                    SizedBox(width: 12),
-                    Text('Max Mustermann',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 4),
-              const Text('Eintrag erfolgt für: Max Mustermann',
-                  style: TextStyle(fontSize: 12, color: Colors.black54)),
-
-              const SizedBox(height: 24),
-
-              // --- DATUM / UHRZEIT ZEILE ---
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('START (DATUM/UHRZEIT)',
-                            style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87)),
-                        const SizedBox(height: 8),
-                        _buildDateTimePickerBox(
-                            _startDate, () => _pickDateTime(true)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('ENDE (DATUM/UHRZEIT)',
-                            style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87)),
-                        const SizedBox(height: 8),
-                        _buildDateTimePickerBox(
-                            _endDate, () => _pickDateTime(false)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              // --- BEMERKUNG ---
-              const Text('BEMERKUNG (OPTIONAL)',
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _remarkController,
-                maxLines: 4,
-                decoration: InputDecoration(
-                  hintText: 'Besonderheiten während des Einsatzes...',
-                  fillColor: Colors.white,
-                  filled: true,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Colors.black12)),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // --- SPEICHERN BUTTON ---
-              _isSaving
-                  ? const Center(child: CircularProgressIndicator())
-                  : ElevatedButton.icon(
-                      onPressed: _saveEntry,
-                      icon: const Icon(Icons.check_circle_outline),
-                      label: const Text('Zeitraum speichern',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(
-                            0xFF427D5D), // Dunkelgrün wie im Screenshot
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(55),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
-            ],
-          ),
         ),
       ),
     );
   }
 
-  // Hilfs-Widget für die Zeit-Auswahl-Boxen
-  Widget _buildDateTimePickerBox(DateTime dateTime, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.black12),
+  Widget _buildPickerBox(String label, DateTime dt, VoidCallback onTap) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+      const SizedBox(height: 8),
+      InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.black12)),
+          child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(_formatDateTime(dt)), const Icon(Icons.calendar_today, size: 16)]),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.between,
-          children: [
-            Text(_formatDateTime(dateTime),
-                style: const TextStyle(fontSize: 15)),
-            const Icon(Icons.calendar_today_outlined,
-                size: 18, color: Colors.black54),
-          ],
-        ),
-      ),
-    );
+      )
+    ]);
   }
 }
 
+// --- TIMER ERFASSUNG (INTERN) ---
 class InternalWorkPage extends StatefulWidget {
   const InternalWorkPage({super.key});
 
@@ -672,254 +381,129 @@ class InternalWorkPage extends StatefulWidget {
 
 class _InternalWorkPageState extends State<InternalWorkPage> {
   final _descriptionController = TextEditingController();
-  
-  // Stoppuhr-Logik
-  Timer? _timer;
+  Timer? _refreshTimer;
   Duration _duration = Duration.zero;
-  bool _isRunning = false;
-  DateTime? _startTime;
-  DateTime? _endTime;
 
-  void _toggleTimer() {
-    setState(() {
-      if (_isRunning) {
-        // Stop
-        _timer?.cancel();
-        _isRunning = false;
-        _endTime = DateTime.now();
-      } else {
-        // Start
-        _isRunning = true;
-        _startTime ??= DateTime.now();
-        _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-          setState(() {
-            _duration = DateTime.now().difference(_startTime!);
-          });
+  @override
+  void initState() {
+    super.initState();
+    // 1. Beim Öffnen prüfen: Läuft der Timer im ApiService bereits?
+    if (ApiService().isTimerRunning) {
+      _startDisplayRefresh();
+    }
+  }
+
+  // 2. Diese Funktion aktualisiert nur die Anzeige auf dem Bildschirm
+  void _startDisplayRefresh() {
+    _refreshTimer?.cancel(); // Alten Refresh-Timer stoppen, falls vorhanden
+    _refreshTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          // Wir holen uns die echte verstrichene Zeit direkt aus dem Service
+          _duration = ApiService().currentDuration;
         });
       }
     });
   }
 
-  String _formatDuration(Duration d) {
-    String twoDigits(int n) => n.toString().padLeft(2, "0");
-    return "${twoDigits(d.inHours)}:${twoDigits(d.inMinutes.remainder(60))}:${twoDigits(d.inSeconds.remainder(60))}";
+  void _handleStart() {
+    setState(() {
+      ApiService().startGlobalTimer(); // Logik im Hintergrund starten
+      _startDisplayRefresh();         // UI-Update starten
+    });
+  }
+
+  void _handleStop() {
+    setState(() {
+      _refreshTimer?.cancel();        // UI-Update stoppen
+      ApiService().stopGlobalTimer();  // Logik im Hintergrund stoppen
+      _duration = Duration.zero;      // Anzeige zurücksetzen
+    });
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    // WICHTIG: Hier stoppen wir NUR das UI-Update. 
+    // Der Timer im ApiService läuft im Hintergrund weiter!
+    _refreshTimer?.cancel();
+    _descriptionController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Wir fragen den ApiService, ob er gerade aktiv ist
+    final bool isRunning = ApiService().isTimerRunning;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: const Text('Neuen Zeiteintrag erstellen', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
-      ),
+      appBar: AppBar(title: const Text('Arbeitszeit')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
-        child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Art der Erfassung', style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                
-                // INFO-BOX
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.info, color: Color(0xFF67C6E3)),
-                      const SizedBox(width: 16),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Büro / Organisation / Fortbildung', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2D3748))),
-                            Text('Diese Stunden werden für den internen Arbeitsnachweis (Büro) erfasst und erfordern keine Schülerzuordnung.', 
-                              style: TextStyle(fontSize: 12, color: Colors.black54)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-                const Center(child: Text('ZEITERFASSUNG', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black45))),
-                const SizedBox(height: 16),
-
-                // START/PAUSE/STOP BUTTONS
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildTimerButton(
-                      label: 'Start', 
-                      icon: Icons.play_arrow, 
-                      color: const Color(0xFF427D5D), 
-                      onTap: _isRunning ? null : _toggleTimer
-                    ),
-                    const SizedBox(width: 12),
-                    _buildTimerButton(
-                      label: 'Pause', 
-                      icon: Icons.pause, 
-                      color: const Color(0xFFF6D55C), 
-                      onTap: () {} // Logik für Pause hier
-                    ),
-                    const SizedBox(width: 12),
-                    _buildTimerButton(
-                      label: 'Stop', 
-                      icon: Icons.stop, 
-                      color: const Color(0xFFD9534F), 
-                      onTap: _isRunning ? _toggleTimer : null
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // STATUS KACHELN
-                Row(
-                  children: [
-                    _buildStatusTile(
-                      icon: Icons.play_circle_outline, 
-                      label: 'GESTARTET', 
-                      value: _startTime == null ? 'Noch nicht gestartet' : "${_startTime!.hour}:${_startTime!.minute}"
-                    ),
-                    const SizedBox(width: 12),
-                    _buildStatusTile(
-                      icon: Icons.stop_circle_outlined, 
-                      label: 'BEENDET', 
-                      value: _endTime == null ? 'Noch nicht gestoppt' : "${_endTime!.hour}:${_endTime!.minute}"
-                    ),
-                    const SizedBox(width: 12),
-                    _buildStatusTile(
-                      icon: Icons.pause_circle_outline, 
-                      label: 'PAUSE', 
-                      value: '0 Min'
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // BLAUE ZEITANZEIGE
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4466F2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.access_time, color: Colors.white, size: 20),
-                          SizedBox(width: 8),
-                          Text('GESAMTLAUFZEIT', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _formatDuration(_duration),
-                        style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-                const Text('TÄTIGKEITSBESCHREIBUNG', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black45)),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _descriptionController,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    hintText: 'z.B. Dokumentation, Team-Meeting, Fahrtzeit...',
-                    fillColor: Colors.white,
-                    filled: true,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.black12)),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                ElevatedButton.icon(
-                  onPressed: () {}, // Speichern Logik
-                  icon: const Icon(Icons.check_circle_outline),
-                  label: const Text('Arbeitszeit speichern'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF9AD9F1), // Hellblau wie im Screenshot
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(55),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTimerButton({required String label, required IconData icon, required Color color, VoidCallback? onTap}) {
-    return Opacity(
-      opacity: onTap == null ? 0.5 : 1.0,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 80,
-          height: 100,
-          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: Colors.white),
-              const SizedBox(height: 8),
-              Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusTile({required IconData icon, required String label, required String value}) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.black12)),
         child: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 16, color: Colors.orangeAccent),
-                const SizedBox(width: 4),
-                Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black45)),
-              ],
+            const Text('Büro / Organisation / Fortbildung', 
+              style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 30),
+            
+            // Start- und Stop-Buttons nutzen jetzt die neuen Handler
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              _buildControlBtn('Start', Icons.play_arrow, Colors.green, 
+                  isRunning ? null : _handleStart),
+              const SizedBox(width: 20),
+              _buildControlBtn('Stop', Icons.stop, Colors.red, 
+                  isRunning ? _handleStop : null),
+            ]),
+            
+            const SizedBox(height: 40),
+            
+            // Die Zeitanzeige
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: const Color(0xFF4466F2), 
+                borderRadius: BorderRadius.circular(12)
+              ),
+              child: Text(
+                _duration.toString().split('.').first.padLeft(8, "0"),
+                style: const TextStyle(
+                  color: Colors.white, 
+                  fontSize: 48, 
+                  fontWeight: FontWeight.bold
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center),
+            
+            const SizedBox(height: 30),
+            TextField(
+              controller: _descriptionController, 
+              decoration: const InputDecoration(
+                labelText: 'Tätigkeitsbeschreibung', 
+                border: OutlineInputBorder()
+              )
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context), 
+              child: const Text('Arbeitszeit speichern')
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildControlBtn(String label, IconData icon, Color color, VoidCallback? onTap) {
+    return ElevatedButton.icon(
+      onPressed: onTap, 
+      icon: Icon(icon), 
+      label: Text(label), 
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color, 
+        foregroundColor: Colors.white
+      )
     );
   }
 }
