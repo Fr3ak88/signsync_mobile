@@ -415,9 +415,9 @@ class _InternalWorkPageState extends State<InternalWorkPage> {
 
   void _handleStop() {
     setState(() {
-      _refreshTimer?.cancel();        // UI-Update stoppen
-      ApiService().stopGlobalTimer();  // Logik im Hintergrund stoppen
-      _duration = Duration.zero;      // Anzeige zurücksetzen
+      _refreshTimer?.cancel();
+      _duration = ApiService().currentDuration;
+      ApiService().stopGlobalTimer();
     });
   }
 
