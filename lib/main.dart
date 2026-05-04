@@ -200,7 +200,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           Text('📅 ARBEITSSTUNDEN DIESER MONAT', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black45)),
           SizedBox(height: 12),
-          Text('cooming soon...', style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.black87)),
+          Text('coming soon...', style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.black87)),
         ],
       ),
     );
@@ -222,7 +222,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             Icon(Icons.archive_outlined, color: Colors.grey),
             SizedBox(width: 16),
-            Text('Dokumente & Archiv (cooming soon...)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+            Text('Dokumente & Archiv (coming soon...)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
             Spacer(),
             Icon(Icons.chevron_right, color: Colors.grey),
           ],

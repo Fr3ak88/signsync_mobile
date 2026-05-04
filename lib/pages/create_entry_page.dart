@@ -15,7 +15,7 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
   final TextEditingController _descriptionController = TextEditingController();
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now().add(const Duration(hours: 1));
-  String _displayStudentName = "Lade..."; // Platzhalter für dynamischen Namen
+  String _displayStudentName = "Lade..."; 
   bool _isSaving = false;
 
   @override
