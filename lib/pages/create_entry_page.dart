@@ -84,7 +84,7 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         title: const Text('Leistung dokumentieren'),
-        backgroundColor: const Color(0xFF427D5D),
+        backgroundColor: const Color(0xFF4466F2),
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -103,7 +103,7 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.school, color: Color(0xFF427D5D)),
+                  const Icon(Icons.school, color: Color(0xFF4466F2)),
                   const SizedBox(width: 12),
                   Text(
                     _displayStudentName, // Dynamischer Name
@@ -179,7 +179,7 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Leistung erfolgreich gespeichert!'), 
-                              backgroundColor: Colors.green
+                              backgroundColor: Color(0xFF4466F2)
                             ),
                           );
                           Navigator.pop(context);
@@ -196,7 +196,7 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF427D5D), 
+                      backgroundColor: const Color(0xFF4466F2), 
                       foregroundColor: Colors.white, 
                       minimumSize: const Size.fromHeight(55),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
