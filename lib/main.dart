@@ -111,7 +111,7 @@ class _HomePageState extends State<HomePage> {
                       subtitle: 'Leistungen für zugewiesene Schüler dokumentieren.',
                       icon: Icons.school,
                       buttonText: 'Leistung erfassen',
-                      buttonColor: const Color(0xFF427D5D), // Dein Haupt-Grün
+                      buttonColor: const Color(0xFF4466F2),
                       onTap: () => Navigator.push(
                         context, 
                         MaterialPageRoute(builder: (context) => const CreateEntryPage())
@@ -126,7 +126,7 @@ class _HomePageState extends State<HomePage> {
                       subtitle: 'Büro, Meetings oder Fortbildungen erfassen.',
                       icon: Icons.assignment_ind,
                       buttonText: 'Arbeitszeit starten',
-                      buttonColor: const Color(0xFF6A9B7E), // Etwas helleres Grün zur Unterscheidung
+                      buttonColor: const Color(0xFF67C6E3), // Etwas helleres Grün zur Unterscheidung
                       onTap: () => Navigator.push(
                         context, 
                         MaterialPageRoute(builder: (context) => const InternalWorkPage())
@@ -193,14 +193,14 @@ class _HomePageState extends State<HomePage> {
       decoration: BoxDecoration(
         color: Colors.white, 
         borderRadius: BorderRadius.circular(12), 
-        border: const Border(left: BorderSide(color: Colors.orange, width: 4)),
+        border: const Border(left: BorderSide(color: Color(0xFF427D5D), width: 4)),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5)],
       ),
       child: const Column(
         children: [
           Text('📅 ARBEITSSTUNDEN DIESER MONAT', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black45)),
           SizedBox(height: 12),
-          Text('19,73 Std.', style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.black87)),
+          Text('cooming soon...', style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.black87)),
         ],
       ),
     );
@@ -222,7 +222,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             Icon(Icons.archive_outlined, color: Colors.grey),
             SizedBox(width: 16),
-            Text('Dokumente & Archiv', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+            Text('Dokumente & Archiv (cooming soon...)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
             Spacer(),
             Icon(Icons.chevron_right, color: Colors.grey),
           ],

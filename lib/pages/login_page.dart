@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '/services/api_service.dart';
-import '/main.dart'; 
+import '../services/api_service.dart';
+import '../main.dart'; 
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -71,11 +71,11 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(
-          0xFFF8F9FA), // Heller Hintergrund wie in der restlichen App
-      appBar: AppBar(
-        title: const Text('SignSync Login'),
+          0xFFF8F9FA), 
+                appBar: AppBar(
+        title: const Text('SignSync'),
         elevation: 0,
-        backgroundColor: const Color(0xFF427D5D), // Dein Grün-Ton
+        backgroundColor: Colors.white, 
         foregroundColor: Colors.white,
       ),
       body: Center(
@@ -87,7 +87,7 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.lock_clock_outlined,
-                    size: 80, color: Color(0xFF427D5D)),
+                    size: 80, color: Color.fromARGB(255, 111, 149, 255)),
                 const SizedBox(height: 10),
                 const Text(
                   'Willkommen zurück',
@@ -124,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
                         onPressed: _doLogin,
                         style: ElevatedButton.styleFrom(
                           minimumSize: const Size.fromHeight(55),
-                          backgroundColor: const Color(0xFF427D5D),
+                          backgroundColor: const Color(0xFF4466F2),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
