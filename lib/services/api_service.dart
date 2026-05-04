@@ -27,9 +27,14 @@ class ApiService {
     return Options(headers: {'Authorization': 'Bearer $token'});
   }
 
-  // NEU: Hilfsmethode um die gespeicherte Schüler-ID des Mitarbeiters zu holen
+  // Holt die gespeicherte Schüler-ID
   Future<String?> getMyStudentId() async {
     return await _storage.read(key: 'my_student_id');
+  }
+
+  // NEU: Holt den gespeicherten Schülernamen für die Anzeige
+  Future<String> getMyStudentName() async {
+    return await _storage.read(key: 'my_student_name') ?? 'Unbekannter Schüler';
   }
 
   // Login
@@ -42,18 +47,21 @@ class ApiService {
       });
 
       if (response.statusCode == 200) {
-        // Token speichern
+        final userData = response.data['user'];
+
+        // Token & Firma speichern
         await _storage.write(key: 'auth_token', value: response.data['token']);
+        await _storage.write(key: 'company_name', value: userData['company_name'] ?? 'Meine Firma');
         
-        // Firmennamen speichern
-        final companyName = response.data['user']['company_name'] ?? 'Meine Firma';
-        await _storage.write(key: 'company_name', value: companyName);
-        
-        // --- ANPASSUNG: Schüler-ID des Mitarbeiters speichern ---
-        // Hier wird angenommen, dass Laravel 'schueler_id' im user-Objekt mitsendet
-        final sId = response.data['user']['schueler_id']?.toString();
+        // --- ANPASSUNG: Schüler-Daten speichern ---
+        final sId = userData['schueler_id']?.toString();
+        final sName = userData['schueler_name']?.toString(); // Erwartet 'schueler_name' vom Backend
+
         if (sId != null) {
           await _storage.write(key: 'my_student_id', value: sId);
+        }
+        if (sName != null) {
+          await _storage.write(key: 'my_student_name', value: sName);
         }
         
         return true;
@@ -86,7 +94,6 @@ class ApiService {
 
       final Map<String, dynamic> requestData = {
         "typ": type.toLowerCase(),
-        // Wenn studentId "0" ist, wird null gesendet (Interne Arbeit)
         "schueler_id": (studentId == "0" || studentId == null) ? null : int.tryParse(studentId),
         "start_zeit": formatDate(startTime),
         "ende_zeit": formatDate(now),
