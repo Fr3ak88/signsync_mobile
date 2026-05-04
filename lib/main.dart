@@ -290,25 +290,49 @@ class _HomePageState extends State<HomePage> {
 
 // --- LEISTUNG ERSTELLEN (SCHÜLER) ---
 class CreateEntryPage extends StatefulWidget {
-  const CreateEntryPage({super.key});
+  final String? studentId; // Hier die Variable definieren
+
+  // Den Konstruktor anpassen
+  const CreateEntryPage({super.key, this.studentId});
+
   @override
   State<CreateEntryPage> createState() => _CreateEntryPageState();
 }
 
 class _CreateEntryPageState extends State<CreateEntryPage> {
-  final _remarkController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now().add(const Duration(hours: 1));
   bool _isSaving = false;
 
   String _formatDateTime(DateTime dt) {
-    return "${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+  // padLeft(2, '0') sorgt dafür, dass führende Nullen angezeigt werden (z.B. 09:05 statt 9:5)
+  String day = dt.day.toString().padLeft(2, '0');
+  String month = dt.month.toString().padLeft(2, '0');
+  String year = dt.year.toString();
+  String hour = dt.hour.toString().padLeft(2, '0'); // dt.hour liefert automatisch 0-23
+  String minute = dt.minute.toString().padLeft(2, '0');
+
+  return "$day.$month.$year $hour:$minute";
   }
 
   Future<void> _pickDateTime(bool isStart) async {
     DateTime? date = await showDatePicker(context: context, initialDate: isStart ? _startDate : _endDate, firstDate: DateTime(2020), lastDate: DateTime(2100));
     if (date == null) return;
-    TimeOfDay? time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(isStart ? _startDate : _endDate));
+    if (!mounted) return;
+
+    TimeOfDay? time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(isStart ? _startDate : _endDate),
+      builder: (BuildContext context, Widget? child) {
+        // Erzwingt das 24h-Layout im Auswahl-Dialog
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child!,
+        );
+      },
+    );
+
     if (time == null) return;
     setState(() {
       final newDt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
@@ -342,11 +366,68 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
             const SizedBox(height: 24),
             const Text('BEMERKUNG (OPTIONAL)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
             const SizedBox(height: 8),
-            TextField(controller: _remarkController, maxLines: 4, decoration: const InputDecoration(filled: true, fillColor: Colors.white, border: OutlineInputBorder())),
+            TextField(controller: _descriptionController, maxLines: 4, decoration: const InputDecoration(filled: true, fillColor: Colors.white, border: OutlineInputBorder())),
             const SizedBox(height: 32),
             ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF427D5D), foregroundColor: Colors.white, minimumSize: const Size.fromHeight(55)),
+              onPressed: () async {
+                // 1. Lade die dem Mitarbeiter zugeordnete Schüler-ID aus dem Speicher
+                final assignedStudentId = await ApiService().getMyStudentId();
+                
+                // 2. Berechne die Netto-Minuten aus dem Timer
+                final netMinutes = ApiService().calculateNetMinutes();
+                
+                // Validierung: Wenn keine ID gefunden wurde, Fehlermeldung zeigen
+                if (assignedStudentId == null) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Fehler: Keine Schüler-Zuordnung gefunden! Bitte neu einloggen.'), 
+                        backgroundColor: Colors.orange
+                      ),
+                    );
+                  }
+                  return;
+                }
+
+                // 3. Sende die Daten an das Laravel-Backend
+                // Wir nutzen hier 'assignedStudentId', die wir oben geladen haben
+                bool success = await ApiService().createEntry(
+                  studentId: assignedStudentId,
+                  type: "leistung",
+                  duration: netMinutes.toString(), 
+                  description: _descriptionController.text,
+                );
+
+                // 4. Ergebnis verarbeiten
+                if (success) {
+                  ApiService().stopGlobalTimer();
+                  ApiService().pausedMinutes = 0;
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Leistung erfolgreich gespeichert!'), 
+                        backgroundColor: Colors.green
+                      ),
+                    );
+                    Navigator.pop(context); // Seite schließen
+                  }
+                } else {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Fehler beim Speichern der Leistung!'), 
+                        backgroundColor: Colors.red
+                      ),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF427D5D), 
+                foregroundColor: Colors.white, 
+                minimumSize: const Size.fromHeight(55)
+              ),
               child: const Text('Zeitraum speichern'),
             ),
           ],
@@ -486,8 +567,44 @@ class _InternalWorkPageState extends State<InternalWorkPage> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () => Navigator.pop(context), 
-              child: const Text('Arbeitszeit speichern')
+              onPressed: () async {
+                // 1. Netto-Minuten berechnen
+                final netMinutes = ApiService().calculateNetMinutes();
+                
+                // 2. Den ApiService aufrufen
+                bool success = await ApiService().createEntry(
+                  studentId: "0", 
+                  type: "arbeit",
+                  duration: netMinutes.toString(), 
+                  description: _descriptionController.text,
+                );
+
+                // 3. Ergebnis verarbeiten
+                if (success) {
+                  ApiService().stopGlobalTimer();
+                  ApiService().pausedMinutes = 0;
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Arbeitszeit erfolgreich gespeichert!'), 
+                        backgroundColor: Colors.green
+                      ),
+                    );
+                    Navigator.pop(context); // Erst jetzt die Seite schließen
+                  }
+                } else {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Fehler beim Speichern! Bitte prüfen Sie die Internetverbindung.'), 
+                        backgroundColor: Colors.red
+                      ),
+                    );
+                  }
+                }
+              },
+              child: const Text('Arbeitszeit speichern'),
             ),
           ],
         ),
