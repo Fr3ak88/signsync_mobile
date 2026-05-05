@@ -194,6 +194,8 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
       type: "leistung",
       duration: netMinutes.toString(),
       description: _descriptionController.text,
+      startTime: _startDate, // ÜBERGIBT DIE GEWÄHLTE STARTZEIT
+      endTime: _endDate,     // ÜBERGIBT DIE GEWÄHLTE ENDZEIT
     );
 
     if (!mounted) return;

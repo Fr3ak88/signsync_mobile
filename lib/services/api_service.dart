@@ -94,49 +94,47 @@ class ApiService {
 
   // Zeiteintrag erstellen
   Future<bool> createEntry({
-    required String studentId, // Jetzt required, da wir sie aus dem Dropdown wählen
-    required String type,
-    required String duration,
-    String? description,
-  }) async {
-    try {
-      final now = DateTime.now();
-      final minutes = int.tryParse(duration) ?? 0;
-      
-      final startTime = now.subtract(Duration(minutes: minutes > 0 ? minutes : 1));
+  required String studentId,
+  required String type,
+  required String duration,
+  String? description,
+  DateTime? startTime, // NEU: Optionaler Parameter
+  DateTime? endTime,   // NEU: Optionaler Parameter
+}) async {
+  try {
+    // Wenn keine Zeiten übergeben wurden (z.B. vom Timer), nutze "jetzt"
+    final finalEnd = endTime ?? DateTime.now();
+    final finalStart = startTime ?? finalEnd.subtract(Duration(minutes: int.tryParse(duration) ?? 1));
 
-      String formatDate(DateTime dt) => 
-          "${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} "
-          "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, '0')}";
+    String formatDate(DateTime dt) => 
+        "${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} "
+        "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, '0')}";
 
-      final options = await _getAuthOptions();
+    final options = await _getAuthOptions();
 
-      final Map<String, dynamic> requestData = {
-        "typ": type.toLowerCase(),
-        "schueler_id": int.tryParse(studentId),
-        "start_zeit": formatDate(startTime),
-        "ende_zeit": formatDate(now),
-        "notiz": description ?? "",
-      };
+    final Map<String, dynamic> requestData = {
+      "typ": type.toLowerCase(),
+      "schueler_id": int.tryParse(studentId),
+      "start_zeit": formatDate(finalStart), // Nutzt jetzt das gewählte Datum
+      "ende_zeit": formatDate(finalEnd),   // Nutzt jetzt das gewählte Datum
+      "notiz": description ?? "",
+    };
 
-      if (pausedMinutes > 0) {
-        requestData["pause_minuten"] = pausedMinutes;
-      }
-
-      final response = await _dio.post(
-        '/timesheet/store', 
-        options: options,
-        data: requestData,
-      );
-
-      return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
-      if (e is DioException) {
-        print("SERVER FEHLER: ${e.response?.data}");
-      }
-      return false;
+    if (pausedMinutes > 0) {
+      requestData["pause_minuten"] = pausedMinutes;
     }
+
+    final response = await _dio.post(
+      '/timesheet/store', 
+      options: options,
+      data: requestData,
+    );
+
+    return response.statusCode == 200 || response.statusCode == 201;
+  } catch (e) {
+    return false;
   }
+}
 
   // --- TIMER LOGIK ---
 
