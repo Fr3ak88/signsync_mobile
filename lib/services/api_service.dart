@@ -129,10 +129,12 @@ class ApiService {
         "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, '0')}";
 
     final options = await _getAuthOptions();
+    final bool isInternal = (studentId == "0" || studentId == "");
 
     final Map<String, dynamic> requestData = {
-      "typ": type.toLowerCase(),
-      "schueler_id": (studentId == "0" || studentId == "") ? null : int.tryParse(studentId),
+      "typ": type.toLowerCase(), // "arbeit"
+      "is_internal": isInternal ? "1" : "0", // Neu hinzugefügt
+      "schueler_id": (studentId == "0" || studentId == "")  ? null : int.tryParse(studentId),
       "start_zeit": formatDate(finalStart),
       "ende_zeit": formatDate(finalEnd),
       "notiz": description ?? "",
@@ -150,6 +152,9 @@ class ApiService {
 
     return response.statusCode == 200 || response.statusCode == 201;
   } catch (e) {
+    if (e is DioException) {
+       print("Fehler-Details: ${e.response?.data}");
+    }
     return false;
   }
 }

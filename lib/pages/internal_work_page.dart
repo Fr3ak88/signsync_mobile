@@ -64,7 +64,7 @@ class _InternalWorkPageState extends State<InternalWorkPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text('Interne Arbeitszeit'),
+        title: const Text('Arbeitszeit'),
         backgroundColor: const Color(0xFF67C6E3),
         foregroundColor: Colors.white,
       ),
@@ -74,7 +74,7 @@ class _InternalWorkPageState extends State<InternalWorkPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Büro / Organisation / Fortbildung',
+              'Allgemeine Arbeitszeit',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 30),
