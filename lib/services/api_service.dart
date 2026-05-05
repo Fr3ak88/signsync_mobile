@@ -120,7 +120,6 @@ class ApiService {
   DateTime? endTime,
 }) async {
   try {
-    // Wenn keine Zeiten übergeben wurden (z.B. vom Timer), nutze "jetzt"
     final finalEnd = endTime ?? DateTime.now();
     final finalStart = startTime ?? finalEnd.subtract(Duration(minutes: int.tryParse(duration) ?? 1));
 
@@ -130,11 +129,19 @@ class ApiService {
 
     final options = await _getAuthOptions();
     final bool isInternal = (studentId == "0" || studentId == "");
+    
+    // NEU: User-ID aus dem Speicher holen (wurde beim Login in user_data abgelegt)
+    String? userDataString = await _storage.read(key: 'user_data');
+    String? userId;
+    if (userDataString != null) {
+      userId = jsonDecode(userDataString)['id'].toString();
+    }
 
     final Map<String, dynamic> requestData = {
-      "typ": type.toLowerCase(), // "arbeit"
-      "is_internal": isInternal ? "1" : "0", // Neu hinzugefügt
-      "schueler_id": (studentId == "0" || studentId == "")  ? null : int.tryParse(studentId),
+      "user_id": userId, // NEU: Explizit mitschicken
+      "typ": type.toLowerCase(),
+      "is_internal": isInternal ? "1" : "0",
+      "schueler_id": isInternal ? null : int.tryParse(studentId),
       "start_zeit": formatDate(finalStart),
       "ende_zeit": formatDate(finalEnd),
       "notiz": description ?? "",
@@ -153,12 +160,12 @@ class ApiService {
     return response.statusCode == 200 || response.statusCode == 201;
   } catch (e) {
     if (e is DioException) {
-       print("Fehler-Details: ${e.response?.data}");
+       // SCHAU HIER IN DIE KONSOLE: Laravel sagt dir hier exakt, welches Feld fehlt!
+       print("VALIDIERUNGSFEHLER: ${e.response?.data}");
     }
     return false;
   }
 }
-
   // --- TIMER LOGIK ---
 
   int calculateNetMinutes() {
