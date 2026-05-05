@@ -138,10 +138,9 @@ class ApiService {
     }
 
     final Map<String, dynamic> requestData = {
-      "user_id": userId, // NEU: Explizit mitschicken
       "typ": type.toLowerCase(),
       "is_internal": isInternal ? "1" : "0",
-      "schueler_id": isInternal ? null : int.tryParse(studentId),
+      "schueler_id": isInternal ? "" : int.tryParse(studentId),
       "start_zeit": formatDate(finalStart),
       "ende_zeit": formatDate(finalEnd),
       "notiz": description ?? "",
