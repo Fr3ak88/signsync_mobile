@@ -132,7 +132,7 @@ class ApiService {
 
     final Map<String, dynamic> requestData = {
       "typ": type.toLowerCase(),
-      "schueler_id": (studentId == "0") ? null : int.tryParse(studentId),
+      "schueler_id": (studentId == "0" || studentId == "") ? null : int.tryParse(studentId),
       "start_zeit": formatDate(finalStart),
       "ende_zeit": formatDate(finalEnd),
       "notiz": description ?? "",
