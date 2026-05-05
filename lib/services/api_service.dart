@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:convert';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -27,17 +28,41 @@ class ApiService {
     return Options(headers: {'Authorization': 'Bearer $token'});
   }
 
-  // Holt die gespeicherte Schüler-ID
+  // NEU: Holt die Liste aller zugewiesenen Schüler für das Dropdown
+  Future<List<Map<String, dynamic>>> getAssignedStudents() async {
+    String? userDataString = await _storage.read(key: 'user_data');
+    if (userDataString != null) {
+      try {
+        final Map<String, dynamic> userData = jsonDecode(userDataString);
+        if (userData['kinder'] != null) {
+          return List<Map<String, dynamic>>.from(userData['kinder']);
+        }
+      } catch (e) {
+        print("Fehler beim Parsen der Schülerliste: $e");
+      }
+    }
+    return [];
+  }
+
+  // Beibehalten für Kompatibilität (gibt ID des ersten Kindes zurück)
   Future<String?> getMyStudentId() async {
-    return await _storage.read(key: 'my_student_id');
+    final students = await getAssignedStudents();
+    if (students.isNotEmpty) {
+      return students.first['id'].toString();
+    }
+    return null;
   }
 
-  // NEU: Holt den gespeicherten Schülernamen für die Anzeige
+  // Beibehalten für Kompatibilität (gibt Name des ersten Kindes zurück)
   Future<String> getMyStudentName() async {
-    return await _storage.read(key: 'my_student_name') ?? 'Unbekannter Schüler';
+    final students = await getAssignedStudents();
+    if (students.isNotEmpty) {
+      return students.first['name'] ?? 'Unbekannter Schüler';
+    }
+    return 'Kein Schüler zugewiesen';
   }
 
-  // Login
+  // Login - ANGEPASST auf das neue Listen-Format
   Future<bool> login(String email, String password) async {
     try {
       final response = await _dio.post('/login', data: {
@@ -49,20 +74,14 @@ class ApiService {
       if (response.statusCode == 200) {
         final userData = response.data['user'];
 
-        // Token & Firma speichern
+        // Token speichern
         await _storage.write(key: 'auth_token', value: response.data['token']);
+        
+        // Firma speichern
         await _storage.write(key: 'company_name', value: userData['company_name'] ?? 'Meine Firma');
         
-        // --- ANPASSUNG: Schüler-Daten speichern ---
-        final sId = userData['schueler_id']?.toString();
-        final sName = userData['schueler_name']?.toString(); // Erwartet 'schueler_name' vom Backend
-
-        if (sId != null) {
-          await _storage.write(key: 'my_student_id', value: sId);
-        }
-        if (sName != null) {
-          await _storage.write(key: 'my_student_name', value: sName);
-        }
+        // --- ANPASSUNG: Speichert das komplette User-Objekt inkl. 'kinder' Liste als JSON ---
+        await _storage.write(key: 'user_data', value: jsonEncode(userData));
         
         return true;
       }
@@ -75,7 +94,7 @@ class ApiService {
 
   // Zeiteintrag erstellen
   Future<bool> createEntry({
-    String? studentId,
+    required String studentId, // Jetzt required, da wir sie aus dem Dropdown wählen
     required String type,
     required String duration,
     String? description,
@@ -94,7 +113,7 @@ class ApiService {
 
       final Map<String, dynamic> requestData = {
         "typ": type.toLowerCase(),
-        "schueler_id": (studentId == "0" || studentId == null) ? null : int.tryParse(studentId),
+        "schueler_id": int.tryParse(studentId),
         "start_zeit": formatDate(startTime),
         "ende_zeit": formatDate(now),
         "notiz": description ?? "",
@@ -103,8 +122,6 @@ class ApiService {
       if (pausedMinutes > 0) {
         requestData["pause_minuten"] = pausedMinutes;
       }
-
-      print("Sende Daten an Server: $requestData");
 
       final response = await _dio.post(
         '/zeiteintraege', 
@@ -116,8 +133,6 @@ class ApiService {
     } catch (e) {
       if (e is DioException) {
         print("SERVER FEHLER: ${e.response?.data}");
-      } else {
-        print("FEHLER: $e");
       }
       return false;
     }
