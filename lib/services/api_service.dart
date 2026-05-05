@@ -120,8 +120,13 @@ class ApiService {
   DateTime? endTime,
 }) async {
   try {
+    // 1. Sicherstellen, dass die Dauer mindestens 1 Minute ist
+    int minutes = int.tryParse(duration) ?? 1;
+    if (minutes < 1) minutes = 1; 
+
     final finalEnd = endTime ?? DateTime.now();
-    final finalStart = startTime ?? finalEnd.subtract(Duration(minutes: int.tryParse(duration) ?? 1));
+    // 2. Startzeit berechnen (Endzeit minus Minuten)
+    final finalStart = startTime ?? finalEnd.subtract(Duration(minutes: minutes));
 
     String formatDate(DateTime dt) => 
         "${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} "
@@ -129,12 +134,12 @@ class ApiService {
 
     final options = await _getAuthOptions();
     final bool isInternal = (studentId == "0" || studentId == "");
-    
-    // NEU: User-ID aus dem Speicher holen (wurde beim Login in user_data abgelegt)
-    String? userDataString = await _storage.read(key: 'user_data');
-    String? userId;
-    if (userDataString != null) {
-      userId = jsonDecode(userDataString)['id'].toString();
+
+    // 3. Sicherheits-Check: Falls durch Rundung Start == Ende, 
+    // setzen wir die Endzeit manuell 1 Sekunde weiter.
+    DateTime adjustedEnd = finalEnd;
+    if (!adjustedEnd.isAfter(finalStart)) {
+      adjustedEnd = finalStart.add(const Duration(seconds: 1));
     }
 
     final Map<String, dynamic> requestData = {
@@ -142,7 +147,7 @@ class ApiService {
       "is_internal": isInternal ? "1" : "0",
       "schueler_id": isInternal ? "" : int.tryParse(studentId),
       "start_zeit": formatDate(finalStart),
-      "ende_zeit": formatDate(finalEnd),
+      "ende_zeit": formatDate(adjustedEnd),
       "notiz": description ?? "",
     };
 
