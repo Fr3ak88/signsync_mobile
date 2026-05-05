@@ -55,12 +55,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadCompanyName() async {
-    String? name = await _storage.read(key: 'company_name');
-    if (mounted) {
-      setState(() {
-        _companyName = name ?? "SignSync";
-      });
-    }
+  // Nutze den zentralen ApiService
+  final name = await ApiService().getCompanyName();
+  
+  if (mounted) {
+    setState(() {
+      _companyName = name;
+    });
+  }
   }
 
   @override
@@ -68,9 +70,9 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text('Dashboard', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        title: const Text('Signsync', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF427D5D),
+        foregroundColor: const Color.fromARGB(255, 0, 0, 0),
         elevation: 0.5,
         actions: [
           IconButton(
@@ -93,7 +95,7 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Willkommen zurück! Erfassen Sie hier Ihre Leistungen oder interne Arbeitszeiten.',
+              'Willkommen zurück! Erfassen Sie hier Ihre Leistungen oder Arbeitszeiten.',
               style: TextStyle(color: Colors.black54, fontSize: 16),
             ),
             const SizedBox(height: 32),
@@ -122,11 +124,11 @@ class _HomePageState extends State<HomePage> {
                   Expanded(
                     flex: isWide ? 1 : 0,
                     child: _buildActionCard(
-                      title: 'Interne Arbeit',
-                      subtitle: 'Büro, Meetings oder Fortbildungen erfassen.',
+                      title: 'Arbeitszeit',
+                      subtitle: 'Allgemeine Arbeitszeiten erfassen.',
                       icon: Icons.assignment_ind,
                       buttonText: 'Arbeitszeit starten',
-                      buttonColor: const Color(0xFF67C6E3), // Etwas helleres Grün zur Unterscheidung
+                      buttonColor: const Color(0xFF67C6E3),
                       onTap: () => Navigator.push(
                         context, 
                         MaterialPageRoute(builder: (context) => const InternalWorkPage())

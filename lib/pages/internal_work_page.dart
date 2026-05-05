@@ -201,7 +201,7 @@ class _InternalWorkPageState extends State<InternalWorkPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Interne Arbeitszeit erfolgreich gespeichert!'), 
+          content: Text('Arbeitszeit erfolgreich gespeichert!'), 
           backgroundColor: Colors.green
         ),
       );

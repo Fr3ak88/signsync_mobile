@@ -92,14 +92,32 @@ class ApiService {
     }
   }
 
+  Future<String> getCompanyName() async {
+    // Wir schauen erst in 'user_data', da dort alle User-Infos liegen
+    String? userDataString = await _storage.read(key: 'user_data');
+    if (userDataString != null) {
+      try {
+        final Map<String, dynamic> userData = jsonDecode(userDataString);
+        // Prüfe ob 'company_name' im User-Objekt steckt
+        if (userData['company_name'] != null) {
+          return userData['company_name'].toString();
+        }
+      } catch (e) {
+        print("Fehler beim Lesen des Firmennamens: $e");
+      }
+    }
+    // Fallback auf den alten Key oder Standardnamen
+    return await _storage.read(key: 'company_name') ?? "SignSync";
+  }
+
   // Zeiteintrag erstellen
   Future<bool> createEntry({
   required String studentId,
   required String type,
   required String duration,
   String? description,
-  DateTime? startTime, // NEU: Optionaler Parameter
-  DateTime? endTime,   // NEU: Optionaler Parameter
+  DateTime? startTime,
+  DateTime? endTime,
 }) async {
   try {
     // Wenn keine Zeiten übergeben wurden (z.B. vom Timer), nutze "jetzt"
@@ -114,9 +132,9 @@ class ApiService {
 
     final Map<String, dynamic> requestData = {
       "typ": type.toLowerCase(),
-      "schueler_id": int.tryParse(studentId),
-      "start_zeit": formatDate(finalStart), // Nutzt jetzt das gewählte Datum
-      "ende_zeit": formatDate(finalEnd),   // Nutzt jetzt das gewählte Datum
+      "schueler_id": (studentId == "0") ? null : int.tryParse(studentId),
+      "start_zeit": formatDate(finalStart),
+      "ende_zeit": formatDate(finalEnd),
       "notiz": description ?? "",
     };
 
