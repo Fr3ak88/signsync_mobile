@@ -65,7 +65,7 @@ class _InternalWorkPageState extends State<InternalWorkPage> {
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         title: const Text('Interne Arbeitszeit'),
-        backgroundColor: const Color(0xFF427D5D),
+        backgroundColor: const Color(0xFF67C6E3),
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -86,7 +86,7 @@ class _InternalWorkPageState extends State<InternalWorkPage> {
                 _buildControlBtn(
                   'Start', 
                   Icons.play_arrow, 
-                  const Color(0xFF427D5D), 
+                  const Color(0xFF67C6E3), 
                   isRunning ? null : _handleStart
                 ),
                 const SizedBox(width: 20),
@@ -106,7 +106,7 @@ class _InternalWorkPageState extends State<InternalWorkPage> {
               width: double.infinity,
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: isRunning ? const Color(0xFF427D5D) : Colors.grey.shade700, 
+                color: isRunning ? const Color(0xFF67C6E3) : Colors.grey.shade700, 
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
@@ -148,7 +148,7 @@ class _InternalWorkPageState extends State<InternalWorkPage> {
               : ElevatedButton(
                   onPressed: isRunning ? null : _saveInternalWork,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF427D5D), 
+                    backgroundColor: const Color(0xFF67C6E3), 
                     foregroundColor: Colors.white,
                     disabledBackgroundColor: Colors.grey.shade300,
                     minimumSize: const Size.fromHeight(55),
