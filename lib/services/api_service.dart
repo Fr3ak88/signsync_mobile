@@ -124,7 +124,7 @@ class ApiService {
       }
 
       final response = await _dio.post(
-        '/zeiteintraege', 
+        '/timesheet/store', 
         options: options,
         data: requestData,
       );
