@@ -155,9 +155,6 @@ class _InternalWorkPageState extends State<InternalWorkPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Art der Erfassung', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 12),
-            
             // Info-Box (Büro / Organisation)
             Container(
               padding: const EdgeInsets.all(16),
@@ -175,9 +172,9 @@ class _InternalWorkPageState extends State<InternalWorkPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Büro / Organisation / Fortbildung', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E5B76))),
+                        Text('Arbeitszeit', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E5B76))),
                         SizedBox(height: 4),
-                        Text('Diese Stunden werden für den internen Arbeitsnachweis (Büro) erfasst und erfordern keine Schülerzuordnung.',
+                        Text('Diese Stunden werden für die Arbeitszeit und erfordern keine Schülerzuordnung.',
                             style: TextStyle(fontSize: 12, color: Colors.black54)),
                       ],
                     ),
