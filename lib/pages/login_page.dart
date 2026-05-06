@@ -75,7 +75,7 @@ class _LoginPageState extends State<LoginPage> {
         title: const Text('SignSync'),
         elevation: 0,
         backgroundColor: Colors.white, 
-        foregroundColor: Colors.black87, // Schriftfarbe der AppBar auf dunkel gesetzt, da Hintergrund weiß ist
+        foregroundColor: Colors.black87,
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -86,18 +86,14 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // NEU: Das Logo wird hier geladen
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16), // Macht die Ecken leicht rund
-                  child: Image.asset(
-                    'assets/icon/app_icon.png', // Dein Bildpfad
-                    height: 120, // Größe des Logos
-                    fit: BoxFit.cover,
-                    // Fallback, falls das Bild beim Entwickeln nicht gefunden wird:
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.account_circle, 
-                      size: 100, 
-                      color: Color(0xFF4466F2)
-                    ),
+                Image.asset(
+                  'assets/icon/app_icon.png', 
+                  height: 120, 
+                  fit: BoxFit.contain, // WICHTIG: Das behält die natürlichen Proportionen bei
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.account_circle, 
+                    size: 100, 
+                    color: Color(0xFF4466F2)
                   ),
                 ),
                 
