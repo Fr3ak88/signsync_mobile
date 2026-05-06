@@ -15,7 +15,6 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now().add(const Duration(hours: 1));
   
-  // NEU: Liste für die Schülerauswahl
   List<Map<String, dynamic>> _assignedStudents = [];
   String? _selectedStudentId;
   bool _isLoadingStudents = true;
@@ -27,9 +26,7 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
     _loadAllStudents();
   }
 
-  // NEU: Lädt alle zugewiesenen Schüler aus dem ApiService
   Future<void> _loadAllStudents() async {
-    // Hier nutzen wir eine neue Methode im ApiService oder ziehen die Daten aus dem Login-User
     final students = await ApiService().getAssignedStudents(); 
     
     if (mounted) {
@@ -37,7 +34,6 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
         _assignedStudents = students;
         _isLoadingStudents = false;
         
-        // Falls eine ID übergeben wurde, diese vorwählen, sonst das erste Kind
         if (widget.studentId != null) {
           _selectedStudentId = widget.studentId;
         } else if (_assignedStudents.isNotEmpty) {
@@ -102,7 +98,6 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 
-                // ANGEPASST: Dropdown statt statischem Container
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
@@ -177,7 +172,6 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
     );
   }
 
-  // NEU: Ausgelagerte Speicherlogik
   Future<void> _saveEntry() async {
     if (_selectedStudentId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -186,31 +180,38 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
       return;
     }
 
-    setState(() => _isSaving = true);
-    final netMinutes = ApiService().calculateNetMinutes();
+    // SICHERHEITS-CHECK: Verhindert den Laravel 422 Fehler direkt in der App
+    if (!_endDate.isAfter(_startDate)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Die Endzeit muss nach der Startzeit liegen!'), backgroundColor: Colors.red),
+      );
+      return;
+    }
 
-    bool success = await ApiService().createEntry(
+    setState(() => _isSaving = true);
+
+    bool success = await ApiService().createStudentLeistung(
       studentId: _selectedStudentId!,
-      type: "leistung",
-      duration: netMinutes.toString(),
-      description: _descriptionController.text,
-      startTime: _startDate, // ÜBERGIBT DIE GEWÄHLTE STARTZEIT
-      endTime: _endDate,     // ÜBERGIBT DIE GEWÄHLTE ENDZEIT
+      startTime: _startDate, 
+      endTime: _endDate,
+      description: _descriptionController.text, // WICHTIG: Die Notiz wird jetzt mitgesendet!
     );
 
     if (!mounted) return;
     setState(() => _isSaving = false);
 
     if (success) {
+      // Falls ein Timer lief, wird dieser als "erledigt" zurückgesetzt
       ApiService().stopGlobalTimer();
       ApiService().pausedMinutes = 0;
+      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Leistung erfolgreich gespeichert!'), backgroundColor: Color(0xFF4466F2)),
       );
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Fehler beim Speichern!'), backgroundColor: Colors.red),
+        const SnackBar(content: Text('Fehler beim Speichern! Bitte überprüfe deine Daten.'), backgroundColor: Colors.red),
       );
     }
   }

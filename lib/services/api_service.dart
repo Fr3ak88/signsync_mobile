@@ -111,64 +111,51 @@ class ApiService {
   }
 
   // Zeiteintrag erstellen
-  Future<bool> createEntry({
-  required String studentId,
-  required String type,
-  required String duration,
-  String? description,
-  DateTime? startTime,
-  DateTime? endTime,
-}) async {
+ // Die private Basis-Methode (intern)
+Future<bool> _sendToBackend(Map<String, dynamic> data) async {
   try {
-    // 1. Sicherstellen, dass die Dauer mindestens 1 Minute ist
-    int minutes = int.tryParse(duration) ?? 1;
-    if (minutes < 1) minutes = 1; 
-
-    final finalEnd = endTime ?? DateTime.now();
-    // 2. Startzeit berechnen (Endzeit minus Minuten)
-    final finalStart = startTime ?? finalEnd.subtract(Duration(minutes: minutes));
-
-    String formatDate(DateTime dt) => 
-        "${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} "
-        "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, '0')}";
-
     final options = await _getAuthOptions();
-    final bool isInternal = (studentId == "0" || studentId == "");
-
-    // 3. Sicherheits-Check: Falls durch Rundung Start == Ende, 
-    // setzen wir die Endzeit manuell 1 Sekunde weiter.
-    DateTime adjustedEnd = finalEnd;
-    if (!adjustedEnd.isAfter(finalStart)) {
-      adjustedEnd = finalStart.add(const Duration(seconds: 1));
-    }
-
-    final Map<String, dynamic> requestData = {
-      "typ": type.toLowerCase(),
-      "is_internal": isInternal ? "1" : "0",
-      "schueler_id": isInternal ? "" : int.tryParse(studentId),
-      "start_zeit": formatDate(finalStart),
-      "ende_zeit": formatDate(adjustedEnd),
-      "notiz": description ?? "",
-    };
-
-    if (pausedMinutes > 0) {
-      requestData["pause_minuten"] = pausedMinutes;
-    }
-
-    final response = await _dio.post(
-      '/timesheet/store', 
-      options: options,
-      data: requestData,
-    );
-
+    final response = await _dio.post('/timesheet/store', options: options, data: data);
     return response.statusCode == 200 || response.statusCode == 201;
   } catch (e) {
-    if (e is DioException) {
-       // SCHAU HIER IN DIE KONSOLE: Laravel sagt dir hier exakt, welches Feld fehlt!
-       print("VALIDIERUNGSFEHLER: ${e.response?.data}");
-    }
+    if (e is DioException) print("Fehler: ${e.response?.data}");
     return false;
   }
+}
+
+// Spezifisch für interne Arbeit
+Future<bool> createInternalWork({
+  required DateTime startTime,
+  required DateTime endTime,
+  String? description,
+}) async {
+  return await _sendToBackend({
+    "typ": "arbeit",
+    "is_internal": "1",
+    "schueler_id": "", // Wie gefordert als leerer String
+    "start_zeit": _formatDate(startTime),
+    "ende_zeit": _formatDate(endTime),
+    "notiz": description ?? "",
+    "user_id": await _getUserId(),
+  });
+}
+
+// Spezifisch für Leistungen am Schüler
+Future<bool> createStudentLeistung({
+  required String studentId,
+  required DateTime startTime,
+  required DateTime endTime,
+  String? description,
+}) async {
+  return await _sendToBackend({
+    "typ": "leistung",
+    "is_internal": "0",
+    "schueler_id": studentId,
+    "start_zeit": _formatDate(startTime),
+    "ende_zeit": _formatDate(endTime),
+    "notiz": description ?? "",
+    "user_id": await _getUserId(),
+  });
 }
   // --- TIMER LOGIK ---
 
