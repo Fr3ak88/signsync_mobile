@@ -203,7 +203,6 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
     if (success) {
       // Falls ein Timer lief, wird dieser als "erledigt" zurückgesetzt
       ApiService().stopGlobalTimer();
-      ApiService().pausedMinutes = 0;
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Leistung erfolgreich gespeichert!'), backgroundColor: Color(0xFF4466F2)),
