@@ -70,13 +70,12 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(
-          0xFFF8F9FA), 
-                appBar: AppBar(
+      backgroundColor: const Color(0xFFF8F9FA), 
+      appBar: AppBar(
         title: const Text('SignSync'),
         elevation: 0,
         backgroundColor: Colors.white, 
-        foregroundColor: Colors.white,
+        foregroundColor: Colors.black87, // Schriftfarbe der AppBar auf dunkel gesetzt, da Hintergrund weiß ist
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -86,9 +85,23 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.lock_clock_outlined,
-                    size: 80, color: Color.fromARGB(255, 111, 149, 255)),
-                const SizedBox(height: 10),
+                // NEU: Das Logo wird hier geladen
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16), // Macht die Ecken leicht rund
+                  child: Image.asset(
+                    'assets/icon/app_icon.png', // Dein Bildpfad
+                    height: 120, // Größe des Logos
+                    fit: BoxFit.cover,
+                    // Fallback, falls das Bild beim Entwickeln nicht gefunden wird:
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.account_circle, 
+                      size: 100, 
+                      color: Color(0xFF4466F2)
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 20),
                 const Text(
                   'Willkommen zurück',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
@@ -119,7 +132,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 24),
                 _isLoading
-                    ? const CircularProgressIndicator(color: Color(0xFF427D5D))
+                    ? const CircularProgressIndicator(color: Color(0xFF4466F2))
                     : ElevatedButton(
                         onPressed: _doLogin,
                         style: ElevatedButton.styleFrom(
