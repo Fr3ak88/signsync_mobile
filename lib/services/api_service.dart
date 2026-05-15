@@ -203,4 +203,32 @@ class ApiService {
     if (externalStartTime == null) return Duration.zero;
     return DateTime.now().difference(externalStartTime!);
   }
+
+  // --- DATEN ABRUFEN ---
+
+  Future<List<Map<String, dynamic>>> getTimesheets() async {
+    try {
+      final options = await _getAuthOptions();
+      
+      // Falls dein Laravel-Endpunkt anders heißt (z.B. /timesheets/index), hier anpassen!
+      final response = await _dio.get('/timesheet', options: options); 
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        
+        // Laravel gibt Daten oft direkt als Liste oder verschachtelt in 'data' (bei Paginierung) zurück
+        if (data is List) {
+          return List<Map<String, dynamic>>.from(data);
+        } else if (data is Map && data.containsKey('data')) {
+          return List<Map<String, dynamic>>.from(data['data']);
+        }
+      }
+      return [];
+    } catch (e) {
+      if (e is DioException) {
+        print("Fehler beim Laden der Historie: ${e.response?.data}");
+      }
+      return [];
+    }
+  }
 }

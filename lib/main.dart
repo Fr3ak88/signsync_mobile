@@ -5,8 +5,9 @@ import 'dart:async';
 // Imports der ausgelagerten Dateien
 import 'services/api_service.dart';
 import 'pages/login_page.dart';
-import 'pages/create_entry_page.dart';        // Deine Seite für Schüler
-import 'pages/internal_work_page.dart';      // Deine Seite für Intern (vorher: create_entry_page_intern)
+import 'pages/create_entry_page.dart';
+import 'pages/internal_work_page.dart';
+import 'pages/timesheet_history_page.dart'; 
 
 void main() async {
   // Stellt sicher, dass die Flutter-Engine bereit ist
@@ -189,21 +190,114 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildStatsCard() {
+    // Hilfsmethode für den aktuellen Monat
+    String getCurrentMonthName() {
+      const months = [
+        'JANUAR', 'FEBRUAR', 'MÄRZ', 'APRIL', 'MAI', 'JUNI', 
+        'JULI', 'AUGUST', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DEZEMBER'
+      ];
+      return months[DateTime.now().month - 1];
+    }
+
+    const Color brandColor = Color(0xFF427D5D); // Dein SignSync Grün
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: Colors.white, 
-        borderRadius: BorderRadius.circular(12), 
-        border: const Border(left: BorderSide(color: Color(0xFF427D5D), width: 4)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5)],
-      ),
-      child: const Column(
-        children: [
-          Text('📅 ARBEITSSTUNDEN DIESER MONAT', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black45)),
-          SizedBox(height: 12),
-          Text('coming soon...', style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.black87)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8.0),
+        child: Container(
+          decoration: const BoxDecoration(
+            border: Border(
+              left: BorderSide(color: brandColor, width: 5.0),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey.shade600),
+                  const SizedBox(width: 8),
+                  Text(
+                    'ARBEITSSTUNDEN IM ${getCurrentMonthName()}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade600,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  const Text(
+                    '0,00', // Hier setzen wir im nächsten Schritt die API-Daten ein
+                    style: TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                      color: brandColor,
+                      height: 1.0,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Std.',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Gesamtzeit aller Zeiten diesen Monat.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+              const SizedBox(height: 24),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const TimesheetHistoryPage()));
+                },
+                icon: const Icon(Icons.format_list_bulleted, size: 18),
+                label: const Text(
+                  'Alle Einträge anzeigen',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: brandColor,
+                  side: const BorderSide(color: brandColor, width: 1.2),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6.0),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
